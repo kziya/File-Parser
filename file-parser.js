@@ -135,6 +135,74 @@ class FileParser {
             return this.#checkJsonObject(filteredData);
         else return false;
     }
+    toJson(data,minify = true)
+    {
+        if(typeof data === 'object')
+        {
+            if(Array.isArray(data))
+            {
+                return this.#arrayToJson(data,minify);
+            }else{
+                return this.#objectToJson(data,minify);
+            }
+        }return false;
+    }
+    #arrayToJson(data,minify)
+    {
+        let result = '[';
+        for(let i = 0;i < data.length; i++)
+        {
+            const elem = data[i];
+            if(typeof elem === 'object')
+            {
+                if(Array.isArray(elem))
+                {
+                    result += this.#arrayToJson(elem);
+                }else{
+                    result += this.#objectToJson(elem);
+                }
+            }else if(typeof elem === 'number')
+            {
+                result += elem;
+            }else if(typeof elem === 'string')
+            {
+                result += `"${ elem }"`;
+            }else return false;
+            if(i !== data.length - 1) result += ',';
+        }
+
+        result +=  ']';
+        return result;
+    }
+    #objectToJson(data,minify)
+    {
+        let result = '{';
+        const keys = Object.keys(data);
+        for(let i = 0; i < keys.length; i++)
+        {
+            const key = keys[i];
+            const elem = data[key];
+            result += `"${ key }":`;
+            if(typeof  elem === 'object')
+            {
+                if(Array.isArray(elem))
+                {
+                    result += this.#arrayToJson(elem);
+                }else{
+                    result += this.#objectToJson(elem);
+                }
+            }else if(typeof elem === 'number')
+            {
+                result += elem;
+            }else if(typeof elem === 'string')
+            {
+                result += `"${ elem }"`;
+            }else return false;
+            if(i !== keys.length - 1) result +=',';
+        }
+        result += "}";
+        return result;
+    }
     #parseJsonArray(jsonArray) {
         const result = [];
         const arrayContent = jsonArray.slice(1, jsonArray.length - 1);
