@@ -10,6 +10,6 @@ const expected1 = {
 };
 const result1 = parser.parseCss('./css/test-1.css');
 const testRes1 = test(result1, expected1);
-console.log(result1,expected1);
+
 if (testRes1) console.log('Css Test 1 passed!');
 else console.log('Css Test 1 not passed!');

@@ -245,14 +245,11 @@ class FileParser {
             const block = blocks[i];
             if (block[0] === '[') {
                 // Array control
-                console.log("a");
                 if (!this.#checkJsonArray(block)) return false;
             } else if (block[0] === '{') {
                 // Object control
-                console.log("b");
                 if (!this.#checkJsonObject(block)) return false;
             } else {
-                console.log(block);
                 // Array element control
                 if (!block.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm)) return false;
             }
