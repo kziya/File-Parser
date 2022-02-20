@@ -4,7 +4,7 @@
     "description": "It is a simple File Parser to convert data into JSON.",
     "main": "index.js",
     "scripts": {
-        "test": "node ./Tests/main.test"
+        "test": "node ./Tests/main.js"
     },
     "keywords": [
         "File",

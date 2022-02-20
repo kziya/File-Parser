@@ -31,14 +31,14 @@ class FileParser {
             return result;
         }
         // Make parsing
-        const filteredData = data.replace(/[\n]+/g, '');
+        const filteredData = data.replace(/[\n\r]+/g, '');
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
             if (block === '') continue;
             const helperArr = block.split('{');
             const selector = helperArr[0];
-            const rules = helperArr[1].replace(/[\n\s\r]+/g, '').split(';');
-            result[selector] = {};
+           const rules = helperArr[1].replace(/[\n\s\r]/g, '').split(';');
+           result[selector] = {};
             for (const rule of rules) {
                 if (rule === '') continue;
                 const helperArr = rule.split(':');
@@ -143,8 +143,12 @@ class FileParser {
             if (block[0] === '[') {
                 result.push(this.#parseJsonArray(block));
             } else if (block[0] === '{') {
+
                 result.push(this.#parseJsonObject(block));
-            } else result.push(block);
+            } else{
+                const parsedVal = parseFloat(block);
+                 result.push(Number.isNaN(parsedVal) ? block : parsedVal);
+            }
         }
 
         return result;
@@ -241,13 +245,16 @@ class FileParser {
             const block = blocks[i];
             if (block[0] === '[') {
                 // Array control
+                console.log("a");
                 if (!this.#checkJsonArray(block)) return false;
             } else if (block[0] === '{') {
                 // Object control
+                console.log("b");
                 if (!this.#checkJsonObject(block)) return false;
             } else {
+                console.log(block);
                 // Array element control
-                if (!block.match(/^((-?\d+\.?\d+)|"[^"]*")$/gm)) return false;
+                if (!block.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm)) return false;
             }
         }
 
@@ -274,7 +281,7 @@ class FileParser {
                 // Json object check
                 if (!this.#checkJsonObject(value)) return false;
             } else {
-                if (!value.match(/^((-?\d+\.?\d+)|"[^"]*")$/gm)) return false;
+                if (!value.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm)) return false;
             }
         }
 
