@@ -4,6 +4,67 @@ Simple file parser in nodejs
 
 ## Usage
 
+## To get file parser
+```js
+const myParser = require('./file-parser');
+```
+### To  get all the available file formats
+```js
+const  fileFormats = myParser.fileTypes;
+```
+## Json
+### You can parse json file with the parseJson  method:
+exapmle.json 
+```json
+[
+    {
+        "name" : "Alex",
+        "age"  : 28
+    },
+    {
+        "name" : "Mark",
+        "age"  : 22
+    }
+]
+```
+app.js
+```js
+const jsonData = myParser.parseJson('./example.json');
+```
+jsonData:
+```js
+    [
+        {
+            name : "Alex",
+            age  : 28
+        },
+        {
+            name  : "Mark",
+            age   :  22 
+        }
+    ]
+```
+### You can also give a string to the parseJson  method:
+```js
+const jsonString = `[
+    {
+        "name" : "Alex",
+        "age"  : 28
+    },
+    {
+        "name" : "Mark",
+        "age"  : 22
+    }
+]`;
+const jsonData  = myParser.parseJson(jsonString,false); 
+
+```
+### You can check json syntax with checkJsonSyntax method:
+```js
+const isValidSyntax = myParser.checkJsonSyntax(jsonString); // only json String
+```
+
+## Css
 ### For example you have to parse this css file into Javascript Object :
 
 ```css
@@ -72,4 +133,8 @@ body {
     margin: 10px;
     background: red;
 }
+```
+### You can check css File syntax too:
+```js
+    const isValidSyntax = myParser.checkCssSyntax(cssString); // only css string
 ```
