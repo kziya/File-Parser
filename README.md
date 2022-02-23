@@ -61,7 +61,7 @@ const jsonData  = myParser.parseJson(jsonString,false);
 ```
 ### You can check json syntax with checkJsonSyntax method:
 ```js
-const isValidSyntax = myParser.checkJsonSyntax(jsonString); // only json String
+const isValidSyntax = myParser.checkJsonSyntax(jsonString); 
 ```
 ### toJson method allows you  to parse JS Object and Array into JSON String :
 ```js
