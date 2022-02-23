@@ -208,9 +208,9 @@ class FileParser {
             {
                 if(Array.isArray(elem))
                 {
-                    result += this.#arrayToJson(elem);
+                    result += this.#arrayToJson(elem,minify,tabNum + 1);
                 }else{
-                    result += this.#objectToJson(elem);
+                    result += this.#objectToJson(elem,minify,tabNum + 1);
                 }
             }else if(typeof elem === 'number')
             {
