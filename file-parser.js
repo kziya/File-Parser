@@ -1,5 +1,6 @@
 'use stirct';
 
+
 class FileParser {
     #fs = require('fs');
     #path = require('path');
@@ -105,12 +106,12 @@ class FileParser {
                 jsonData = this.#fs
                     .readFileSync(this.#fileDir + jsonInput)
                     .toString()
-                    .replace(/[\s\n\r]/g, '');
+                    .replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
             } catch (e) {
                 res.errorMessage = 'File is not found!';
                 return res;
             }
-        } else jsonData = jsonInput.replace(/[\s\n\r]/g, '');
+        } else jsonData = jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
         if (!jsonData) return null;
         if (!this.checkJsonSyntax(jsonData)) {
             res.errorMessage = 'Syntax error!';
@@ -126,7 +127,7 @@ class FileParser {
         }
     }
     checkJsonSyntax(jsonData) {
-        const filteredData = jsonData.replace(/[\s\r\n]+/g, '');
+        const filteredData = jsonData.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
         if (filteredData[0] === '[')
             // Array
             return this.#checkJsonArray(filteredData, '');
@@ -141,19 +142,69 @@ class FileParser {
         {
             if(Array.isArray(data))
             {
-                return this.#arrayToJson(data,minify);
+                return this.#arrayToJson(data,minify,0);
             }else{
-                return this.#objectToJson(data,minify);
+                return this.#objectToJson(data,minify,0);
             }
         }return false;
     }
-    #arrayToJson(data,minify)
+    makeJsonFile(jsonInput,fileUrl,minFile = true)
     {
-        let result = '[';
+        const type = typeof jsonInput;
+        const jsonData = type === 'string' ? (minFile ?  jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,'') : jsonInput )  : this.toJson(jsonInput,minFile);
+        if(!jsonData) return false;
+        if(!this.checkJsonSyntax(jsonData)) return false;
+        try{
+            this.#fs.writeFileSync(this.#fileDir + fileUrl,jsonData);
+        }catch(e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+    #arrayToJson(data,minify,tabNum)
+    {
+        if(minify) {
+            return this.#arrayToMinJson(data);
+         } let result =`[\n${this.#tabs(tabNum + 1)}`;
         for(let i = 0;i < data.length; i++)
         {
             const elem = data[i];
             if(typeof elem === 'object')
+            {
+                if(Array.isArray(elem))
+                {
+                    result += this.#arrayToJson(elem,minify,tabNum + 1);
+                }else{
+                    result += this.#objectToJson(elem,minify,tabNum + 1);
+                }
+            }else if(typeof elem === 'number')
+            {
+                result +=  elem;
+            }else if(typeof elem === 'string')
+            {
+                result += `"${ elem }"`;
+            }else return false;
+            if(i !== data.length - 1) result += `,\n${ this.#tabs(tabNum + 1) }`;
+        }
+
+        result += `\n${this.#tabs(tabNum)}]`;
+        return result;
+    }
+    #objectToJson(data,minify,tabNum)
+    {
+        if(minify)
+            return this.#objectToMinJson(data);
+
+        let result = `{\n ${this.#tabs(tabNum + 1)}`;
+        const keys = Object.keys(data);
+        for(let i = 0; i < keys.length; i++)
+        {
+            const key = keys[i];
+            const elem = data[key];
+            result += `"${ key }" : `;
+            if(typeof  elem === 'object')
             {
                 if(Array.isArray(elem))
                 {
@@ -168,13 +219,39 @@ class FileParser {
             {
                 result += `"${ elem }"`;
             }else return false;
+            if(i !== keys.length - 1) result +=`,\n${ this.#tabs(tabNum + 1) }`;
+        }
+        result += `\n${ this.#tabs(tabNum) }}`;
+        return result;
+    }
+    #arrayToMinJson(data)
+    {
+        let result = '[';
+        for(let i = 0;i < data.length; i++)
+        {
+            const elem = data[i];
+            if(typeof elem === 'object')
+            {
+                if(Array.isArray(elem))
+                {
+                    result += this.#arrayToMinJson(elem);
+                }else{
+                    result += this.#objectToMinJson(elem);
+                }
+            }else if(typeof elem === 'number')
+            {
+                result += elem;
+            }else if(typeof elem === 'string')
+            {
+                result += `"${ elem }"`;
+            }else return false;
             if(i !== data.length - 1) result += ',';
         }
 
         result +=  ']';
         return result;
     }
-    #objectToJson(data,minify)
+    #objectToMinJson(data)
     {
         let result = '{';
         const keys = Object.keys(data);
@@ -187,9 +264,9 @@ class FileParser {
             {
                 if(Array.isArray(elem))
                 {
-                    result += this.#arrayToJson(elem);
+                    result += this.#arrayToMinJson(elem);
                 }else{
-                    result += this.#objectToJson(elem);
+                    result += this.#objectToMinJson(elem);
                 }
             }else if(typeof elem === 'number')
             {
@@ -214,11 +291,11 @@ class FileParser {
 
                 result.push(this.#parseJsonObject(block));
             } else{
-                const parsedVal = parseFloat(block);
-                 result.push(Number.isNaN(parsedVal) ? block : parsedVal);
+                const match = block.match(/([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm);
+                const parsedVal = parseFloat(match);
+                result.push(Number.isNaN(parsedVal) ? match[0] : parsedVal);
             }
         }
-
         return result;
     }
     #parseJsonObject(jsonObject) {
@@ -237,7 +314,7 @@ class FileParser {
             } else if (value[0] === '{') {
                 result[name] = this.#parseJsonObject(value);
             } else {
-                const match = value.match(/((?<=")[^"]*(?=")|-?\d+\.?\d+)/);
+                const match = value.match(/([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm);
                 const realVal = match ? match[0] : '';
                 const parsedVal = parseFloat(realVal);
                 result[name] = Number.isNaN(parsedVal) ? realVal : parsedVal;
@@ -387,6 +464,16 @@ class FileParser {
         }
         return firstColonIndex;
     }
+    #tabs(number)
+    {
+        let res = '';
+        for(let i = 0; i < number; i++)
+        {
+            res +='\t';
+        }
+        return res;
+    }
+
 }
 
 

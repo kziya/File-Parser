@@ -14,6 +14,10 @@ const expected1 = [
 ];
 const result1 = parser.parseJson('./json/test-1.json');
 const testRes1 = test(result1, expected1);
+const json = parser.toJson(result1,false);
+
+
+
 
 if (testRes1) console.log('Json test 1 passed!');
 else console.log('json test 1 not passed!');
