@@ -63,6 +63,42 @@ const jsonData  = myParser.parseJson(jsonString,false);
 ```js
 const isValidSyntax = myParser.checkJsonSyntax(jsonString); // only json String
 ```
+### toJson method allows you  to parse JS Object and Array into JSON String :
+```js
+const data = {
+    name:"Mark",
+    age:22,
+    adress:{
+        country : "Ukraine",
+        city    :  "Kiev",
+    }
+};
+
+const jsonString = myParser.toJson(data,false);
+const  minJsonString = myParser.toJson(data); 
+```
+jsonString :
+```json
+{
+        "name" : "Mark",
+        "age" : 22,
+        "adress" : {
+                "country" : "Ukraine",
+                "city" : "Kiev"
+        }
+}
+```
+minJsonString :
+```json
+{"name":"Mark","age":22,"adress":{"country":"Ukraine","city":"Kiev"}}
+```
+### makeJsonFile method:
+```js
+    const isCreatedFile = parser.makeJsonFile(data,'./json/data.json',false); // returns false  if something went wrong
+    const isCreatedMinFile = parser.makeJsonFile(data,'./json/data.json'); 
+    const isCreatedFile2 = parser.makeJsonFile(jsonString,'json/data,json'); // can also pass string 
+```
+
 
 ## Css
 ### For example you have to parse this css file into Javascript Object :
