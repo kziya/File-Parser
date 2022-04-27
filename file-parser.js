@@ -4,7 +4,7 @@
 class FileParser {
     #fs = require('fs');
     #path = require('path');
-    #fileDir = this.#path.dirname(require.main.filename) + '/';
+    #dirPath = this.#path.dirname(require.main.filename) + '/';
     #fileTypes = ['css', 'json'];
     constructor() {
         Object.freeze(this.fileTypes);
@@ -12,19 +12,29 @@ class FileParser {
     get fileTypes() {
         return this.#fileTypes;
     }
-    parseCss(cssInput, isFile = true) {
+    parseCssFile(filePath)
+    {
         const result = {};
-        let data = '';
-        if (isFile) {
-            try {
-                data = this.#fs
-                    .readFileSync(this.#fileDir + cssInput)
-                    .toString();
-            } catch (e) {
-                result.errorMessage = 'File not found!';
-                return result;
-            }
-        } else data = cssInput;
+        const fileResult = this.#getFile(filePath);
+        // if File not exists return error message
+        if(fileResult.errorMessage) return fileResult;
+        return this.parseCss(fileResult.data);
+    }
+    #getFile(filePath)
+    {
+        const result = { };
+        try{
+            result.data =  this.#fs.readFileSync(this.#dirPath + filePath).toString();
+            
+        }catch(e)
+        {
+            result.errorMessage = "File is not found!"; 
+        }
+        return result;
+    }
+    parseCss(cssInput) {
+        const result = {};
+        const data = cssInput;
         // Check Syntax
         const syntaxValidFlag = this.checkCssSyntax(data);
         if (!syntaxValidFlag) {
@@ -38,8 +48,8 @@ class FileParser {
             if (block === '') continue;
             const helperArr = block.split('{');
             const selector = helperArr[0];
-           const rules = helperArr[1].replace(/[\n\s\r]/g, '').split(';');
-           result[selector] = {};
+            const rules = helperArr[1].replace(/[\n\s\r]/g, '').split(';');
+            result[selector] = {};
             for (const rule of rules) {
                 if (rule === '') continue;
                 const helperArr = rule.split(':');
@@ -74,17 +84,11 @@ class FileParser {
         }
         return result;
     }
-    makeCssFile(cssData, fileUrl, isObject = true, minFile = true) {
-        const cssString = isObject
-            ? this.toCss(cssData, minFile)
-            : minFile
-            ? cssData
-            : cssData.replace(/[\s\r\n]/, '');
+    makeCssFile(cssData, fileUrl, minFile = false) {
+        const cssString = this.toCss(cssData,minFile);
         try {
-            this.#fs.writeFileSync(
-                this.#fileDir + '/' + fileUrl + '.css',
-                cssString
-            );
+            const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.css') ? '' :'.css');
+            this.#fs.writeFileSync(fullPath,cssString);
         } catch (e) {
             return false;
         }
@@ -104,7 +108,7 @@ class FileParser {
             // get File
             try {
                 jsonData = this.#fs
-                    .readFileSync(this.#fileDir + jsonInput)
+                    .readFileSync(this.#dirPath + jsonInput)
                     .toString()
                     .replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
             } catch (e) {
@@ -155,7 +159,7 @@ class FileParser {
         if(!jsonData) return false;
         if(!this.checkJsonSyntax(jsonData)) return false;
         try{
-            this.#fs.writeFileSync(this.#fileDir + fileUrl,jsonData);
+            this.#fs.writeFileSync(this.#dirPath + fileUrl,jsonData);
         }catch(e)
         {
             return false;
@@ -335,20 +339,21 @@ class FileParser {
                 else return false;
             }
         }
+        if(nextScope === '}') return false;
         return true;
     }
     #checkCssBlocks(filteredData) {
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
             if (block === '') continue;
-            if (!block.includes('{')) return false;
             const helperArr = block.split('{');
             const selector = helperArr[0];
             if (selector.replace(/[\s\r\n ]+/g, '') === '') return false;
             const rules = helperArr[1].split(';');
-            for (const rule of rules) {
-                if (rule === '') continue;
-                if (!rule.match(/^([a-zA-Z0-9\-#()]+:[a-zA-Z0-9\-#()]+)$/g))
+            for (let i = 0;i < rules.length; i++) {
+                const rule = rules[i];
+                if (rule === '' && i === rules.length - 1) return true;
+                if (!rule.match(/^([a-zA-Z0-9\-#()]+:[a-zA-Z0-9\-#()%"]+)$/g))
                     return false;
             }
         }
@@ -473,7 +478,6 @@ class FileParser {
         }
         return res;
     }
-
 }
 
 
