@@ -14,7 +14,6 @@ class FileParser {
     }
     parseCssFile(filePath)
     {
-        const result = {};
         const fileResult = this.#getFile(filePath);
         // if File not exists return error message
         if(fileResult.errorMessage) return fileResult;
@@ -101,21 +100,15 @@ class FileParser {
         if (!this.#checkCssBlocks(filteredData)) return false;
         return true;
     }
-    parseJson(jsonInput, isFile = true) {
+    parseJsonFile(filePath)
+    {
+        const fileResult = this.#getFile(filePath);
+        if(fileResult.errorMessage) return fileResult;
+        return this.parseJson(fileResult.data);
+    }
+    parseJson(jsonInput) {
         const res = {};
-        let jsonData = '';
-        if (isFile) {
-            // get File
-            try {
-                jsonData = this.#fs
-                    .readFileSync(this.#dirPath + jsonInput)
-                    .toString()
-                    .replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
-            } catch (e) {
-                res.errorMessage = 'File is not found!';
-                return res;
-            }
-        } else jsonData = jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
+        const jsonData = jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
         if (!jsonData) return null;
         if (!this.checkJsonSyntax(jsonData)) {
             res.errorMessage = 'Syntax error!';
@@ -152,14 +145,15 @@ class FileParser {
             }
         }return false;
     }
-    makeJsonFile(jsonInput,fileUrl,minFile = true)
+    makeJsonFile(jsonInput,fileUrl,minFile = false)
     {
-        const type = typeof jsonInput;
-        const jsonData = type === 'string' ? (minFile ?  jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,'') : jsonInput )  : this.toJson(jsonInput,minFile);
+
+        const jsonData = this.toJson(jsonInput,minFile);
         if(!jsonData) return false;
         if(!this.checkJsonSyntax(jsonData)) return false;
         try{
-            this.#fs.writeFileSync(this.#dirPath + fileUrl,jsonData);
+            const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.json') ? '' :'.json');
+            this.#fs.writeFileSync(fullPath,jsonData);
         }catch(e)
         {
             return false;
