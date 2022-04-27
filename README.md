@@ -4,9 +4,10 @@ Simple file parser in nodejs
 
 ## Usage
 
-## To get file parser
+## To get the FileParser
 ```js
-const myParser = require('./file-parser');
+const FileParser = require('./file-parser');
+const myParser = new FileParser();
 ```
 ### To  get all the available file formats
 ```js
@@ -29,7 +30,7 @@ exapmle.json
 ```
 app.js
 ```js
-const jsonData = myParser.parseJson('./example.json');
+const jsonData = myParser.parseJsonFile('./example.json');
 ```
 jsonData:
 ```js
@@ -44,7 +45,7 @@ jsonData:
         }
     ]
 ```
-### You can also give a string to the parseJson  method:
+### You can also parse a json string with the parseJson  method:
 ```js
 const jsonString = `[
     {
@@ -74,8 +75,8 @@ const data = {
     }
 };
 
-const jsonString = myParser.toJson(data,false);
-const  minJsonString = myParser.toJson(data); 
+const jsonString = myParser.toJson(data);
+const  minJsonString = myParser.toJson(data,true); 
 ```
 jsonString :
 ```json
@@ -94,9 +95,8 @@ minJsonString :
 ```
 ### makeJsonFile method:
 ```js
-    const isCreatedFile = parser.makeJsonFile(data,'./json/data.json',false); // returns false  if something went wrong
-    const isCreatedMinFile = parser.makeJsonFile(data,'./json/data.json'); 
-    const isCreatedFile2 = parser.makeJsonFile(jsonString,'json/data,json'); // can also pass string 
+    const isCreatedFile = parser.makeJsonFile(data,'./json/data.json'); // returns false  if something went wrong
+    const isCreatedMinFile = parser.makeJsonFile(data,'./json/data.json',true);      
 ```
 
 
@@ -113,8 +113,7 @@ body {
 You can do it via file parser :
 
 ```js
-const myParser = new FileParser();
-const cssData = myParser.parseCss('./style.css');
+const cssData = myParser.parseCssFile('./style.css');
 ```
 
 cssData :
@@ -128,7 +127,7 @@ cssData :
 }
 ```
 
-You can also give a css string to parseCss method:
+You can also give parse css string with the parseCss method:
 
 ```js
 const cssString = `
@@ -137,7 +136,7 @@ const cssString = `
           background:red;
       }
   `;
-const cssData = myParser.parseCss(cssString, false);
+const cssData = myParser.parseCss(cssString);
 ```
 
 ### File parser can parse Javascript object into css string :
@@ -170,7 +169,7 @@ body {
     background: red;
 }
 ```
-### You can check css File syntax too:
+### You can check css File syntax:
 ```js
-    const isValidSyntax = myParser.checkCssSyntax(cssString); // only css string
+    const isValidSyntax = myParser.checkCssSyntax(cssString); 
 ```
