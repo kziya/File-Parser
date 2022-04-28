@@ -14,7 +14,7 @@ const myParser = new FileParser();
 const  fileFormats = myParser.fileTypes;
 ```
 ## Json
-### You can parse json file with the parseJson  method:
+### You can parse json file with the parseJsonFile  method:
 exapmle.json 
 ```json
 [
