@@ -164,10 +164,7 @@ body {
 minCssString :
 
 ```css
-body {
-    margin: 10px;
-    background: red;
-}
+body{margin:10px;background:red;}
 ```
 ### You can check css File syntax:
 ```js
