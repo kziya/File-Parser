@@ -57,7 +57,7 @@ const jsonString = `[
         "age"  : 22
     }
 ]`;
-const jsonData  = myParser.parseJson(jsonString,false); 
+const jsonData  = myParser.parseJson(jsonString); 
 
 ```
 ### You can check json syntax with checkJsonSyntax method:
