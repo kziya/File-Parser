@@ -127,7 +127,7 @@ cssData :
 }
 ```
 
-You can also give parse css string with the parseCss method:
+You can also  parse css string with the parseCss method:
 
 ```js
 const cssString = `
