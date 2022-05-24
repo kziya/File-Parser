@@ -8,7 +8,7 @@ const expected1 = {
     background: 'red',
   },
 };
-const result1 = parser.parseCss('./css/test-1.css');
+const result1 = parser.parseCssFile('./css/test-1.css');
 const testRes1 = test(result1, expected1);
 
 if (testRes1) console.log('Css Test 1 passed!');

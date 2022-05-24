@@ -12,7 +12,7 @@ const expected1 = [
     age: 22,
   },
 ];
-const result1 = parser.parseJson('./json/test-1.json');
+const result1 = parser.parseJsonFile('./json/test-1.json');
 const testRes1 = test(result1, expected1);
 
 

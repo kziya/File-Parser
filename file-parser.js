@@ -94,6 +94,7 @@ class FileParser {
         return true;
     }
     checkCssSyntax(cssData) {
+
         const filteredData = cssData.replace(/[\n\r\s ]/g, '');
         if (filteredData === '') return false;
         if (!this.#checkCssBrackets(filteredData)) return false;
@@ -343,7 +344,7 @@ class FileParser {
             const helperArr = block.split('{');
             const selector = helperArr[0];
             if (selector.replace(/[\s\r\n ]+/g, '') === '') return false;
-            const rules = helperArr[1].split(';');
+               const rules = helperArr[1].split(';');
             for (let i = 0;i < rules.length; i++) {
                 const rule = rules[i];
                 if (rule === '' && i === rules.length - 1) return true;
