@@ -1,34 +1,32 @@
 'use stirct';
 
-
 class FileParser {
     #fs;
-    #path; 
+    #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
-    constructor(fs,path) {
+    constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
-        this.#dirPath = this.#path.dirname(require.main.filename) + '/'; 
+        this.#dirPath = this.#path.dirname(require.main.filename) + '/';
     }
     get fileTypes() {
         return this.#fileTypes;
     }
 
-    parseCssFile(filePath)
-    {
+    parseCssFile(filePath) {
         const fileResult = this.#getFile(filePath);
         // if File not exists return error message
-        if(fileResult.errorMessage) return fileResult;
+        if (fileResult.errorMessage) return fileResult;
         return this.parseCss(fileResult.data);
     }
-    
+
     parseCss(cssInput) {
         const data = cssInput;
         // Check Syntax
         const syntaxValidFlag = this.checkCssSyntax(data);
         if (!syntaxValidFlag) {
-            return { errorMessage : 'Syntax error in the css file!' };
+            return { errorMessage: 'Syntax error in the css file!' };
         }
         // Make parsing
         return this.#deserialazeCss(data);
@@ -58,32 +56,37 @@ class FileParser {
         return result;
     }
     makeCssFile(cssData, fileUrl, minFile = false) {
-        const cssString = this.toCss(cssData,minFile);
+        const cssString = this.toCss(cssData, minFile);
         try {
-            const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.css') ? '' :'.css');
-            this.#fs.writeFileSync(fullPath,cssString);
+            const fullPath =
+                this.#dirPath +
+                '/' +
+                fileUrl +
+                (fileUrl.endsWith('.css') ? '' : '.css');
+            this.#fs.writeFileSync(fullPath, cssString);
         } catch (e) {
             return false;
         }
         return true;
     }
     checkCssSyntax(cssData) {
-
         const filteredData = cssData.replace(/[\n\r\s ]/g, '');
         if (filteredData === '') return false;
         if (!this.#checkCssBrackets(filteredData)) return false;
         if (!this.#checkCssBlocks(filteredData)) return false;
         return true;
     }
-    parseJsonFile(filePath)
-    {
+    parseJsonFile(filePath) {
         const fileResult = this.#getFile(filePath);
-        if(fileResult.errorMessage) return fileResult;
+        if (fileResult.errorMessage) return fileResult;
         return this.parseJson(fileResult.data);
     }
     parseJson(jsonInput) {
         const res = {};
-        const jsonData = jsonInput.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
+        const jsonData = jsonInput.replace(
+            /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
+            ''
+        );
         if (!jsonData) return null;
         if (!this.checkJsonSyntax(jsonData)) {
             res.errorMessage = 'Syntax error!';
@@ -99,7 +102,10 @@ class FileParser {
         }
     }
     checkJsonSyntax(jsonData) {
-        const filteredData = jsonData.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '');
+        const filteredData = jsonData.replace(
+            /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
+            ''
+        );
         if (filteredData[0] === '[')
             // Array
             return this.#checkJsonArray(filteredData, '');
@@ -108,47 +114,45 @@ class FileParser {
             return this.#checkJsonObject(filteredData);
         else return false;
     }
-    toJson(data,minify = true)
-    {
-        if(typeof data === 'object')
-        {
-            if(Array.isArray(data))
-            {
-                return this.#arrayToJson(data,minify,0);
-            }else{
-                return this.#objectToJson(data,minify,0);
+    toJson(data, minify = true) {
+        if (typeof data === 'object') {
+            if (Array.isArray(data)) {
+                return this.#arrayToJson(data, minify, 0);
+            } else {
+                return this.#objectToJson(data, minify, 0);
             }
-        }return false;
+        }
+        return false;
     }
-    makeJsonFile(jsonInput,fileUrl,minFile = false)
-    {
-
-        const jsonData = this.toJson(jsonInput,minFile);
-        if(!jsonData) return false;
-        if(!this.checkJsonSyntax(jsonData)) return false;
-        try{
-            const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.json') ? '' :'.json');
-            this.#fs.writeFileSync(fullPath,jsonData);
-        }catch(e)
-        {
+    makeJsonFile(jsonInput, fileUrl, minFile = false) {
+        const jsonData = this.toJson(jsonInput, minFile);
+        if (!jsonData) return false;
+        if (!this.checkJsonSyntax(jsonData)) return false;
+        try {
+            const fullPath =
+                this.#dirPath +
+                '/' +
+                fileUrl +
+                (fileUrl.endsWith('.json') ? '' : '.json');
+            this.#fs.writeFileSync(fullPath, jsonData);
+        } catch (e) {
             return false;
         }
 
         return true;
     }
-    #getFile(filePath)
-    {
-        const result = { };
-        try{
-            result.data =  this.#fs.readFileSync(this.#dirPath + filePath).toString();
-            
-        }catch(e)
-        {
-            result.errorMessage = "File is not found!"; 
+    #getFile(filePath) {
+        const result = {};
+        try {
+            result.data = this.#fs
+                .readFileSync(this.#dirPath + filePath)
+                .toString();
+        } catch (e) {
+            result.errorMessage = 'File is not found!';
         }
         return result;
     }
-    #deserialazeCss(data){
+    #deserialazeCss(data) {
         const filteredData = data.replace(/[\n\r]+/g, '');
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
@@ -167,121 +171,97 @@ class FileParser {
         }
         return result;
     }
-    #arrayToJson(data,minify,tabNum)
-    {
-        if(minify) {
+    #arrayToJson(data, minify, tabNum) {
+        if (minify) {
             return this.#arrayToMinJson(data);
-         } let result =`[\n${this.#tabs(tabNum + 1)}`;
-        for(let i = 0;i < data.length; i++)
-        {
+        }
+        let result = `[\n${this.#tabs(tabNum + 1)}`;
+        for (let i = 0; i < data.length; i++) {
             const elem = data[i];
-            if(typeof elem === 'object')
-            {
-                if(Array.isArray(elem))
-                {
-                    result += this.#arrayToJson(elem,minify,tabNum + 1);
-                }else{
-                    result += this.#objectToJson(elem,minify,tabNum + 1);
+            if (typeof elem === 'object') {
+                if (Array.isArray(elem)) {
+                    result += this.#arrayToJson(elem, minify, tabNum + 1);
+                } else {
+                    result += this.#objectToJson(elem, minify, tabNum + 1);
                 }
-            }else if(typeof elem === 'number')
-            {
-                result +=  elem;
-            }else if(typeof elem === 'string')
-            {
-                result += `"${ elem }"`;
-            }else return false;
-            if(i !== data.length - 1) result += `,\n${ this.#tabs(tabNum + 1) }`;
+            } else if (typeof elem === 'number') {
+                result += elem;
+            } else if (typeof elem === 'string') {
+                result += `"${elem}"`;
+            } else return false;
+            if (i !== data.length - 1) result += `,\n${this.#tabs(tabNum + 1)}`;
         }
 
         result += `\n${this.#tabs(tabNum)}]`;
         return result;
     }
-    #objectToJson(data,minify,tabNum)
-    {
-        if(minify)
-            return this.#objectToMinJson(data);
+    #objectToJson(data, minify, tabNum) {
+        if (minify) return this.#objectToMinJson(data);
 
         let result = `{\n ${this.#tabs(tabNum + 1)}`;
         const keys = Object.keys(data);
-        for(let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const elem = data[key];
-            result += `"${ key }" : `;
-            if(typeof  elem === 'object')
-            {
-                if(Array.isArray(elem))
-                {
-                    result += this.#arrayToJson(elem,minify,tabNum + 1);
-                }else{
-                    result += this.#objectToJson(elem,minify,tabNum + 1);
+            result += `"${key}" : `;
+            if (typeof elem === 'object') {
+                if (Array.isArray(elem)) {
+                    result += this.#arrayToJson(elem, minify, tabNum + 1);
+                } else {
+                    result += this.#objectToJson(elem, minify, tabNum + 1);
                 }
-            }else if(typeof elem === 'number')
-            {
+            } else if (typeof elem === 'number') {
                 result += elem;
-            }else if(typeof elem === 'string')
-            {
-                result += `"${ elem }"`;
-            }else return false;
-            if(i !== keys.length - 1) result +=`,\n${ this.#tabs(tabNum + 1) }`;
+            } else if (typeof elem === 'string') {
+                result += `"${elem}"`;
+            } else return false;
+            if (i !== keys.length - 1) result += `,\n${this.#tabs(tabNum + 1)}`;
         }
-        result += `\n${ this.#tabs(tabNum) }}`;
+        result += `\n${this.#tabs(tabNum)}}`;
         return result;
     }
-    #arrayToMinJson(data)
-    {
+    #arrayToMinJson(data) {
         let result = '[';
-        for(let i = 0;i < data.length; i++)
-        {
+        for (let i = 0; i < data.length; i++) {
             const elem = data[i];
-            if(typeof elem === 'object')
-            {
-                if(Array.isArray(elem))
-                {
+            if (typeof elem === 'object') {
+                if (Array.isArray(elem)) {
                     result += this.#arrayToMinJson(elem);
-                }else{
+                } else {
                     result += this.#objectToMinJson(elem);
                 }
-            }else if(typeof elem === 'number')
-            {
+            } else if (typeof elem === 'number') {
                 result += elem;
-            }else if(typeof elem === 'string')
-            {
-                result += `"${ elem }"`;
-            }else return false;
-            if(i !== data.length - 1) result += ',';
+            } else if (typeof elem === 'string') {
+                result += `"${elem}"`;
+            } else return false;
+            if (i !== data.length - 1) result += ',';
         }
 
-        result +=  ']';
+        result += ']';
         return result;
     }
-    #objectToMinJson(data)
-    {
+    #objectToMinJson(data) {
         let result = '{';
         const keys = Object.keys(data);
-        for(let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const elem = data[key];
-            result += `"${ key }":`;
-            if(typeof  elem === 'object')
-            {
-                if(Array.isArray(elem))
-                {
+            result += `"${key}":`;
+            if (typeof elem === 'object') {
+                if (Array.isArray(elem)) {
                     result += this.#arrayToMinJson(elem);
-                }else{
+                } else {
                     result += this.#objectToMinJson(elem);
                 }
-            }else if(typeof elem === 'number')
-            {
+            } else if (typeof elem === 'number') {
                 result += elem;
-            }else if(typeof elem === 'string')
-            {
-                result += `"${ elem }"`;
-            }else return false;
-            if(i !== keys.length - 1) result +=',';
+            } else if (typeof elem === 'string') {
+                result += `"${elem}"`;
+            } else return false;
+            if (i !== keys.length - 1) result += ',';
         }
-        result += "}";
+        result += '}';
         return result;
     }
     #parseJsonArray(jsonArray) {
@@ -292,10 +272,11 @@ class FileParser {
             if (block[0] === '[') {
                 result.push(this.#parseJsonArray(block));
             } else if (block[0] === '{') {
-
                 result.push(this.#parseJsonObject(block));
-            } else{
-                const match = block.match(/([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm);
+            } else {
+                const match = block.match(
+                    /([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm
+                );
                 const parsedVal = parseFloat(match);
                 result.push(Number.isNaN(parsedVal) ? match[0] : parsedVal);
             }
@@ -318,7 +299,9 @@ class FileParser {
             } else if (value[0] === '{') {
                 result[name] = this.#parseJsonObject(value);
             } else {
-                const match = value.match(/([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm);
+                const match = value.match(
+                    /([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm
+                );
                 const realVal = match ? match[0] : '';
                 const parsedVal = parseFloat(realVal);
                 result[name] = Number.isNaN(parsedVal) ? realVal : parsedVal;
@@ -339,7 +322,7 @@ class FileParser {
                 else return false;
             }
         }
-        if(nextScope === '}') return false;
+        if (nextScope === '}') return false;
         return true;
     }
     #checkCssBlocks(filteredData) {
@@ -349,8 +332,8 @@ class FileParser {
             const helperArr = block.split('{');
             const selector = helperArr[0];
             if (selector.replace(/[\s\r\n ]+/g, '') === '') return false;
-               const rules = helperArr[1].split(';');
-            for (let i = 0;i < rules.length; i++) {
+            const rules = helperArr[1].split(';');
+            for (let i = 0; i < rules.length; i++) {
                 const rule = rules[i];
                 if (rule === '' && i === rules.length - 1) return true;
                 if (!rule.match(/^([a-zA-Z0-9\-#()]+:[a-zA-Z0-9\-#()%"]+)$/g))
@@ -401,7 +384,8 @@ class FileParser {
                 if (!this.#checkJsonObject(block)) return false;
             } else {
                 // Array element control
-                if (!block.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm)) return false;
+                if (!block.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm))
+                    return false;
             }
         }
 
@@ -428,7 +412,8 @@ class FileParser {
                 // Json object check
                 if (!this.#checkJsonObject(value)) return false;
             } else {
-                if (!value.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm)) return false;
+                if (!value.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm))
+                    return false;
             }
         }
 
@@ -469,16 +454,13 @@ class FileParser {
         }
         return firstColonIndex;
     }
-    #tabs(number)
-    {
+    #tabs(number) {
         let res = '';
-        for(let i = 0; i < number; i++)
-        {
-            res +='\t';
+        for (let i = 0; i < number; i++) {
+            res += '\t';
         }
         return res;
     }
 }
-
 
 module.exports = FileParser;
