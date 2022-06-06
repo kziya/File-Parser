@@ -31,20 +31,11 @@ class FileParser {
         // Make parsing
         return this.#deserialazeCss(data);
     }
+
     toCss(cssData, minFlag = false) {
         let result = '';
         const keys = Object.keys(cssData);
-        if (minFlag) {
-            for (const key of keys) {
-                result += key + '{';
-                const ruleKeys = Object.keys(cssData[key]);
-                for (const ruleKey of ruleKeys) {
-                    result += `${ruleKey}:${cssData[key][ruleKey]};`;
-                }
-                result += '}';
-            }
-            return result;
-        }
+        if (minFlag) return this.#toMinCss(cssData, keys);
         for (const key of keys) {
             result += key + '{\n';
             const ruleKeys = Object.keys(cssData[key]);
@@ -140,6 +131,18 @@ class FileParser {
         }
 
         return true;
+    }
+    #toMinCss(cssData, keys) {
+        let result = '';
+        for (const key of keys) {
+            result += key + '{';
+            const ruleKeys = Object.keys(cssData[key]);
+            for (const ruleKey of ruleKeys) {
+                result += `${ruleKey}:${cssData[key][ruleKey]};`;
+            }
+            result += '}';
+        }
+        return result;
     }
     #getFile(filePath) {
         const result = {};
