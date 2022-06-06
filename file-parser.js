@@ -2,16 +2,19 @@
 
 
 class FileParser {
-    #fs = require('fs');
-    #path = require('path');
-    #dirPath = this.#path.dirname(require.main.filename) + '/';
+    #fs;
+    #path; 
+    #dirPath;
     #fileTypes = ['css', 'json'];
-    constructor() {
-        Object.freeze(this.fileTypes);
+    constructor(fs,path) {
+        this.#fs = fs;
+        this.#path = path;
+        this.#dirPath = this.#path.dirname(require.main.filename) + '/'; 
     }
     get fileTypes() {
         return this.#fileTypes;
     }
+
     parseCssFile(filePath)
     {
         const fileResult = this.#getFile(filePath);
@@ -19,45 +22,16 @@ class FileParser {
         if(fileResult.errorMessage) return fileResult;
         return this.parseCss(fileResult.data);
     }
-    #getFile(filePath)
-    {
-        const result = { };
-        try{
-            result.data =  this.#fs.readFileSync(this.#dirPath + filePath).toString();
-            
-        }catch(e)
-        {
-            result.errorMessage = "File is not found!"; 
-        }
-        return result;
-    }
+    
     parseCss(cssInput) {
-        const result = {};
         const data = cssInput;
         // Check Syntax
         const syntaxValidFlag = this.checkCssSyntax(data);
         if (!syntaxValidFlag) {
-            result.errorMessage = 'Syntax error in the css file!';
-            return result;
+            return { errorMessage : 'Syntax error in the css file!' };
         }
         // Make parsing
-        const filteredData = data.replace(/[\n\r]+/g, '');
-        const cssBlocks = filteredData.split('}');
-        for (const block of cssBlocks) {
-            if (block === '') continue;
-            const helperArr = block.split('{');
-            const selector = helperArr[0];
-            const rules = helperArr[1].replace(/[\n\s\r]/g, '').split(';');
-            result[selector] = {};
-            for (const rule of rules) {
-                if (rule === '') continue;
-                const helperArr = rule.split(':');
-                const ruleName = helperArr[0];
-                const ruleValue = helperArr[1];
-                result[selector][ruleName] = ruleValue;
-            }
-        }
-        return result;
+        return this.#deserialazeCss(data);
     }
     toCss(cssData, minFlag = false) {
         let result = '';
@@ -161,6 +135,37 @@ class FileParser {
         }
 
         return true;
+    }
+    #getFile(filePath)
+    {
+        const result = { };
+        try{
+            result.data =  this.#fs.readFileSync(this.#dirPath + filePath).toString();
+            
+        }catch(e)
+        {
+            result.errorMessage = "File is not found!"; 
+        }
+        return result;
+    }
+    #deserialazeCss(data){
+        const filteredData = data.replace(/[\n\r]+/g, '');
+        const cssBlocks = filteredData.split('}');
+        for (const block of cssBlocks) {
+            if (block === '') continue;
+            const helperArr = block.split('{');
+            const selector = helperArr[0];
+            const rules = helperArr[1].replace(/[\n\s\r]/g, '').split(';');
+            result[selector] = {};
+            for (const rule of rules) {
+                if (rule === '') continue;
+                const helperArr = rule.split(':');
+                const ruleName = helperArr[0];
+                const ruleValue = helperArr[1];
+                result[selector][ruleName] = ruleValue;
+            }
+        }
+        return result;
     }
     #arrayToJson(data,minify,tabNum)
     {
