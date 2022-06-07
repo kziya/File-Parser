@@ -6,8 +6,10 @@ Simple file parser in nodejs
 
 ## To get the FileParser
 ```js
+const fs = require('fs');
+const path = require('path');
 const FileParser = require('./file-parser');
-const myParser = new FileParser();
+const myParser = new FileParser(fs,path);
 ```
 ### To  get all the available file formats
 ```js
