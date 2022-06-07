@@ -9,29 +9,26 @@ class FileParser {
         this.#fs = fs;
         this.#path = path;
         this.#dirPath = this.#path.dirname(require.main.filename) + '/';
+
     }
     get fileTypes() {
         return this.#fileTypes;
     }
-
     parseCssFile(filePath) {
         const fileResult = this.#getFile(filePath);
         // if File not exists return error message
         if (fileResult.errorMessage) return fileResult;
         return this.parseCss(fileResult.data);
     }
-
-    parseCss(cssInput) {
-        const data = cssInput;
+    parseCss(cssString) {
         // Check Syntax
-        const syntaxValidFlag = this.checkCssSyntax(data);
+        const syntaxValidFlag = this.checkCssSyntax(cssString);
         if (!syntaxValidFlag) {
             return { errorMessage: 'Syntax error in the css file!' };
         }
         // Make parsing
-        return this.#deserialazeCss(data);
-    }
-
+        return this.#deserialazeCss(cssString);
+    } 
     toCss(cssData, minFlag = false) {
         let result = '';
         const keys = Object.keys(cssData);
@@ -45,7 +42,7 @@ class FileParser {
             result += '}\n\n';
         }
         return result;
-    }
+    }   
     makeCssFile(cssData, fileUrl, minFile = false) {
         const cssString = this.toCss(cssData, minFile);
         try {
@@ -60,8 +57,8 @@ class FileParser {
         }
         return true;
     }
-    checkCssSyntax(cssData) {
-        const filteredData = cssData.replace(/[\n\r\s ]/g, '');
+    checkCssSyntax(cssString) {
+        const filteredData = cssString.replace(/[\n\r\s ]/g, '');
         if (filteredData === '') return false;
         if (!this.#checkCssBrackets(filteredData)) return false;
         if (!this.#checkCssBlocks(filteredData)) return false;
@@ -72,38 +69,36 @@ class FileParser {
         if (fileResult.errorMessage) return fileResult;
         return this.parseJson(fileResult.data);
     }
-    parseJson(jsonInput) {
+    parseJson(jsonString) {
         const res = {};
-        const jsonData = jsonInput.replace(
+        const filteredJsonString = jsonString.replace(
             /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
             ''
         );
-        if (!jsonData) return null;
-        if (!this.checkJsonSyntax(jsonData)) {
+        if (!filteredJsonString) return null;
+        if (!this.checkJsonSyntax(filteredJsonString)) {
             res.errorMessage = 'Syntax error!';
             return res;
         }
         // Make parsing
-        if (jsonData[0] === '[') {
-            // Parse json  array
-            return this.#parseJsonArray(jsonData);
-        } else {
+            // parse json array            
+        if (filteredJsonString[0] === '[')  return this.#parseJsonArray(filteredJsonString);
             // parse json object
-            return this.#parseJsonObject(jsonData);
-        }
+        return this.#parseJsonObject(filteredJsonString);
+        
     }
-    checkJsonSyntax(jsonData) {
-        const filteredData = jsonData.replace(
+    checkJsonSyntax(jsonString) {
+        const filteredJsonString = jsonString.replace(
             /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
             ''
         );
-        if (filteredData[0] === '[')
+        if (filteredJsonString[0] === '[')
             // Array
-            return this.#checkJsonArray(filteredData, '');
-        else if (filteredData[0] === '{')
+            return this.#checkJsonArray(filteredJsonString, '');
+        else if (filteredJsonString[0] === '{')
             // Object
-            return this.#checkJsonObject(filteredData);
-        else return false;
+            return this.#checkJsonObject(filteredJsonString);
+        return false; // If It is not an array and object return false
     }
     toJson(data, minify = true) {
         if (typeof data === 'object') {
@@ -115,17 +110,16 @@ class FileParser {
         }
         return false;
     }
-    makeJsonFile(jsonInput, fileUrl, minFile = false) {
-        const jsonData = this.toJson(jsonInput, minFile);
-        if (!jsonData) return false;
-        if (!this.checkJsonSyntax(jsonData)) return false;
+    makeJsonFile(jsonData, fileUrl, minFile = false) {
+        const jsonString = this.toJson(jsonData, minFile);
+        if (!jsonString) return false;
         try {
             const fullPath =
                 this.#dirPath +
                 '/' +
                 fileUrl +
                 (fileUrl.endsWith('.json') ? '' : '.json');
-            this.#fs.writeFileSync(fullPath, jsonData);
+            this.#fs.writeFileSync(fullPath, jsonString);
         } catch (e) {
             return false;
         }
@@ -155,8 +149,8 @@ class FileParser {
         }
         return result;
     }
-    #deserialazeCss(data) {
-        const filteredData = data.replace(/[\n\r]+/g, '');
+    #deserialazeCss(cssString) {
+        const filteredData = cssString.replace(/[\n\r]+/g, '');
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
             if (block === '') continue;
