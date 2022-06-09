@@ -1,15 +1,15 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const FileParser = require('../file-parser');
-const test = require('./test');
-const parser = new FileParser();
-const expected1 = {
-  '*': {
-    margin: '10px',
-    background: 'red',
-  },
+const assert = require('node:assert');
+const myParser = new FileParser(fs, path);
+const expected = {
+    '*': {
+        margin: '10px',
+        background: 'red',
+    },
 };
-const result1 = parser.parseCssFile('./css/test-1.css');
-const testRes1 = test(result1, expected1);
-
-if (testRes1) console.log('Css Test 1 passed!');
-else console.log('Css Test 1 not passed!');
+const actual = myParser.parseCssFile('./css/test-1.css');
+assert.deepStrictEqual(actual, expected);
+console.log('Json test passed !');

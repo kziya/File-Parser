@@ -9,7 +9,7 @@ class FileParser {
         this.#fs = fs;
         this.#path = path;
         this.#dirPath = this.#path.dirname(require.main.filename) + '/';
-
+        Object.freeze(this.#fileTypes);
     }
     get fileTypes() {
         return this.#fileTypes;
@@ -28,21 +28,13 @@ class FileParser {
         }
         // Make parsing
         return this.#deserialazeCss(cssString);
-    } 
+    }
     toCss(cssData, minFlag = false) {
-        let result = '';
         const keys = Object.keys(cssData);
-        if (minFlag) return this.#toMinCss(cssData, keys);
-        for (const key of keys) {
-            result += key + '{\n';
-            const ruleKeys = Object.keys(cssData[key]);
-            for (const ruleKey of ruleKeys) {
-                result += `    ${ruleKey} : ${cssData[key][ruleKey]};\n`;
-            }
-            result += '}\n\n';
-        }
-        return result;
-    }   
+        if (minFlag) return this.#serialazeMinCss(cssData, keys);
+        return this.#serialazeCss(cssData, keys);
+    }
+
     makeCssFile(cssData, fileUrl, minFile = false) {
         const cssString = this.toCss(cssData, minFile);
         try {
@@ -81,11 +73,11 @@ class FileParser {
             return res;
         }
         // Make parsing
-            // parse json array            
-        if (filteredJsonString[0] === '[')  return this.#parseJsonArray(filteredJsonString);
-            // parse json object
+        // parse json array
+        if (filteredJsonString[0] === '[')
+            return this.#parseJsonArray(filteredJsonString);
+        // parse json object
         return this.#parseJsonObject(filteredJsonString);
-        
     }
     checkJsonSyntax(jsonString) {
         const filteredJsonString = jsonString.replace(
@@ -126,7 +118,18 @@ class FileParser {
 
         return true;
     }
-    #toMinCss(cssData, keys) {
+    #serialazeCss(cssData, keys) {
+        let result = '';
+        for (const key of keys) {
+            result += key + '{\n';
+            const ruleKeys = Object.keys(cssData[key]);
+            for (const ruleKey of ruleKeys) {
+                result += `    ${ruleKey} : ${cssData[key][ruleKey]};\n`;
+            }
+            result += '}\n\n';
+        }
+    }
+    #serialazeMinCss(cssData, keys) {
         let result = '';
         for (const key of keys) {
             result += key + '{';
@@ -150,6 +153,7 @@ class FileParser {
         return result;
     }
     #deserialazeCss(cssString) {
+        const result = {};
         const filteredData = cssString.replace(/[\n\r]+/g, '');
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
