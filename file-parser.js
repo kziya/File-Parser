@@ -5,7 +5,6 @@ class FileParser {
     #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
-
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
@@ -42,7 +41,11 @@ class FileParser {
 
     makeCssFile(cssData, fileUrl, minFile = false) {
         const cssString = this.toCss(cssData, minFile);
-        const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.css') ? '' : '.css');
+        const fullPath =
+            this.#dirPath +
+            '/' +
+            fileUrl +
+            (fileUrl.endsWith('.css') ? '' : '.css');
         this.#fs.writeFileSync(fullPath, cssString);
 
         return true;
@@ -81,20 +84,6 @@ class FileParser {
         return this.#parseJsonObject(filteredJsonString);
     }
 
-    checkJsonSyntax(jsonString) {
-        const filteredJsonString = jsonString.replace(
-            /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
-            ''
-        );
-        if (filteredJsonString[0] === '[')
-            // Array
-            return this.#checkJsonArray(filteredJsonString, '');
-        else if (filteredJsonString[0] === '{')
-            // Object
-            return this.#checkJsonObject(filteredJsonString);
-        return false; // If It is not an array and object return false
-    }
-
     toJson(data, minify = true) {
         if (typeof data === 'object') {
             if (Array.isArray(data)) {
@@ -119,6 +108,20 @@ class FileParser {
         return true;
     }
 
+    checkJsonSyntax(jsonString) {
+        const filteredJsonString = jsonString.replace(
+            /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
+            ''
+        );
+        if (filteredJsonString[0] === '[')
+            // Array
+            return this.#checkJsonArray(filteredJsonString, '');
+        else if (filteredJsonString[0] === '{')
+            // Object
+            return this.#checkJsonObject(filteredJsonString);
+        return false; // If It is not an array and object return false
+    }
+
     #serialazeCss(cssData, keys) {
         let result = '';
         for (const key of keys) {
@@ -129,6 +132,7 @@ class FileParser {
             }
             result += '}\n\n';
         }
+        return result;
     }
 
     #serialazeMinCss(cssData, keys) {
@@ -323,6 +327,7 @@ class FileParser {
     }
 
     #checkCssBrackets(filteredData) {
+        if (!filteredData.includes('{')) return false;
         let nextScope = '{';
         for (let index = 0; index < filteredData.length; index++) {
             const char = filteredData[index];
