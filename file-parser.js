@@ -5,21 +5,25 @@ class FileParser {
     #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
+
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
         this.#dirPath = this.#path.dirname(require.main.filename) + '/';
         Object.freeze(this.#fileTypes);
     }
+
     get fileTypes() {
         return this.#fileTypes;
     }
+
     parseCssFile(filePath) {
         const fileResult = this.#getFile(filePath);
         // if File not exists return error message
         if (fileResult.errorMessage) return fileResult;
         return this.parseCss(fileResult.data);
     }
+
     parseCss(cssString) {
         // Check Syntax
         const syntaxValidFlag = this.checkCssSyntax(cssString);
@@ -29,6 +33,7 @@ class FileParser {
         // Make parsing
         return this.#deserialazeCss(cssString);
     }
+
     toCss(cssData, minFlag = false) {
         const keys = Object.keys(cssData);
         if (minFlag) return this.#serialazeMinCss(cssData, keys);
@@ -37,18 +42,12 @@ class FileParser {
 
     makeCssFile(cssData, fileUrl, minFile = false) {
         const cssString = this.toCss(cssData, minFile);
-        try {
-            const fullPath =
-                this.#dirPath +
-                '/' +
-                fileUrl +
-                (fileUrl.endsWith('.css') ? '' : '.css');
-            this.#fs.writeFileSync(fullPath, cssString);
-        } catch (e) {
-            return false;
-        }
+        const fullPath = this.#dirPath + '/' + fileUrl + (fileUrl.endsWith('.css') ? '' : '.css');
+        this.#fs.writeFileSync(fullPath, cssString);
+
         return true;
     }
+
     checkCssSyntax(cssString) {
         const filteredData = cssString.replace(/[\n\r\s ]/g, '');
         if (filteredData === '') return false;
@@ -56,11 +55,13 @@ class FileParser {
         if (!this.#checkCssBlocks(filteredData)) return false;
         return true;
     }
+
     parseJsonFile(filePath) {
         const fileResult = this.#getFile(filePath);
         if (fileResult.errorMessage) return fileResult;
         return this.parseJson(fileResult.data);
     }
+
     parseJson(jsonString) {
         const res = {};
         const filteredJsonString = jsonString.replace(
@@ -79,6 +80,7 @@ class FileParser {
         // parse json object
         return this.#parseJsonObject(filteredJsonString);
     }
+
     checkJsonSyntax(jsonString) {
         const filteredJsonString = jsonString.replace(
             /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
@@ -92,6 +94,7 @@ class FileParser {
             return this.#checkJsonObject(filteredJsonString);
         return false; // If It is not an array and object return false
     }
+
     toJson(data, minify = true) {
         if (typeof data === 'object') {
             if (Array.isArray(data)) {
@@ -102,22 +105,20 @@ class FileParser {
         }
         return false;
     }
+
     makeJsonFile(jsonData, fileUrl, minFile = false) {
         const jsonString = this.toJson(jsonData, minFile);
         if (!jsonString) return false;
-        try {
-            const fullPath =
-                this.#dirPath +
-                '/' +
-                fileUrl +
-                (fileUrl.endsWith('.json') ? '' : '.json');
-            this.#fs.writeFileSync(fullPath, jsonString);
-        } catch (e) {
-            return false;
-        }
+        const fullPath =
+            this.#dirPath +
+            '/' +
+            fileUrl +
+            (fileUrl.endsWith('.json') ? '' : '.json');
+        this.#fs.writeFileSync(fullPath, jsonString);
 
         return true;
     }
+
     #serialazeCss(cssData, keys) {
         let result = '';
         for (const key of keys) {
@@ -129,6 +130,7 @@ class FileParser {
             result += '}\n\n';
         }
     }
+
     #serialazeMinCss(cssData, keys) {
         let result = '';
         for (const key of keys) {
@@ -141,6 +143,7 @@ class FileParser {
         }
         return result;
     }
+
     #getFile(filePath) {
         const result = {};
         try {
@@ -152,6 +155,7 @@ class FileParser {
         }
         return result;
     }
+
     #deserialazeCss(cssString) {
         const result = {};
         const filteredData = cssString.replace(/[\n\r]+/g, '');
@@ -172,6 +176,7 @@ class FileParser {
         }
         return result;
     }
+
     #arrayToJson(data, minify, tabNum) {
         if (minify) {
             return this.#arrayToMinJson(data);
@@ -196,6 +201,7 @@ class FileParser {
         result += `\n${this.#tabs(tabNum)}]`;
         return result;
     }
+
     #objectToJson(data, minify, tabNum) {
         if (minify) return this.#objectToMinJson(data);
 
@@ -221,6 +227,7 @@ class FileParser {
         result += `\n${this.#tabs(tabNum)}}`;
         return result;
     }
+
     #arrayToMinJson(data) {
         let result = '[';
         for (let i = 0; i < data.length; i++) {
@@ -242,6 +249,7 @@ class FileParser {
         result += ']';
         return result;
     }
+
     #objectToMinJson(data) {
         let result = '{';
         const keys = Object.keys(data);
@@ -265,6 +273,7 @@ class FileParser {
         result += '}';
         return result;
     }
+
     #parseJsonArray(jsonArray) {
         const result = [];
         const arrayContent = jsonArray.slice(1, jsonArray.length - 1);
@@ -284,6 +293,7 @@ class FileParser {
         }
         return result;
     }
+
     #parseJsonObject(jsonObject) {
         const result = {};
         const objectContent = jsonObject.slice(1, jsonObject.length - 1);
@@ -311,6 +321,7 @@ class FileParser {
 
         return result;
     }
+
     #checkCssBrackets(filteredData) {
         let nextScope = '{';
         for (let index = 0; index < filteredData.length; index++) {
@@ -326,6 +337,7 @@ class FileParser {
         if (nextScope === '}') return false;
         return true;
     }
+
     #checkCssBlocks(filteredData) {
         const cssBlocks = filteredData.split('}');
         for (const block of cssBlocks) {
@@ -343,6 +355,7 @@ class FileParser {
         }
         return true;
     }
+
     #checkJsonBrackets(jsonData) {
         // Remove all the chars except [,{,},]
         const brackets = jsonData.replace(/[^{}\[\]]+/g, '');
@@ -368,6 +381,7 @@ class FileParser {
         if (stack.length) return false;
         return true;
     }
+
     #checkJsonArray(jsonArray) {
         if (!this.#checkJsonBrackets(jsonArray)) return false;
         const arrayContent = jsonArray.slice(1, jsonArray.length - 1);
@@ -392,6 +406,7 @@ class FileParser {
 
         return true;
     }
+
     #checkJsonObject(jsonObject) {
         if (!this.#checkJsonBrackets(jsonObject)) return false;
         const objectContent = jsonObject.slice(1, jsonObject.length - 1);
@@ -420,6 +435,7 @@ class FileParser {
 
         return true;
     }
+
     #getJsonBlocks(jsonContent) {
         const bracketStack = [];
         const hash = {
@@ -442,6 +458,7 @@ class FileParser {
         blocks.push(jsonContent.slice(lastIndex));
         return blocks;
     }
+
     #firstColonIndex(jsonObject) {
         let openedQuote = false;
         let firstColonIndex = 0;
@@ -455,6 +472,7 @@ class FileParser {
         }
         return firstColonIndex;
     }
+
     #tabs(number) {
         let res = '';
         for (let i = 0; i < number; i++) {
