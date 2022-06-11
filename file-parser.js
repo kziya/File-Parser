@@ -5,6 +5,7 @@ class FileParser {
     #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
+
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
@@ -25,12 +26,13 @@ class FileParser {
 
     parseCss(cssString) {
         // Check Syntax
-        const syntaxValidFlag = this.checkCssSyntax(cssString);
+        const filteredCssString = this.#removeComments(cssString);
+        const syntaxValidFlag = this.checkCssSyntax(filteredCssString);
         if (!syntaxValidFlag) {
             return { errorMessage: 'Syntax error in the css file!' };
         }
         // Make parsing
-        return this.#deserialazeCss(cssString);
+        return this.#deserialazeCss(filteredCssString);
     }
 
     toCss(cssData, minFlag = false) {
@@ -121,6 +123,21 @@ class FileParser {
             return this.#checkJsonObject(filteredJsonString);
         return false; // If It is not an array and object return false
     }
+
+    #removeComments = (string) => {
+        let filteredString = string;
+        let openIndex = filteredString.indexOf('/*');
+        while (openIndex !== -1) {
+            const begin = filteredString.slice(0, openIndex);
+            const closeIndex = filteredString.indexOf('*/');
+            if (closeIndex !== -1)
+                filteredString = begin + filteredString.slice(closeIndex + 2);
+            else filteredString = begin;
+            openIndex = filteredString.indexOf('/*');
+        }
+
+        return filteredString;
+    };
 
     #serialazeCss(cssData, keys) {
         let result = '';
