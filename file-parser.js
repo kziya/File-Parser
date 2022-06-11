@@ -69,9 +69,8 @@ class FileParser {
 
     parseJson(jsonString) {
         const res = {};
-        const filteredJsonString = jsonString.replace(
-            /\s+(?=([^"]*"[^"]*")*[^"]*$)/gm,
-            ''
+        const filteredJsonString = this.#removeComments(
+            jsonString.replace(/\s+(?=([^"]*"[^"]*")*[^"]*$)/gm, '')
         );
         if (!filteredJsonString) return null;
         if (!this.checkJsonSyntax(filteredJsonString)) {
