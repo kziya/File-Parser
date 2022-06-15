@@ -1,6 +1,5 @@
 'use stirct';
 
-const { json } = require("express");
 
 class FileParser {
     #fs;
@@ -125,7 +124,7 @@ class FileParser {
 
         else
             // Elem
-            return filteredJsonString.match() ? true : false; 
+            return this.#checkJsonElem(filteredJsonString);
     }
 
     #removeComments = (string) => {
@@ -436,7 +435,7 @@ class FileParser {
     }
 
     #checkJsonObject(jsonObject) {
-        if(this.#checkJsonBrackets(jsonObject)) return false;
+        if(!this.#checkJsonBrackets(jsonObject)) return false;
         const objectContent = jsonObject.slice(1, jsonObject.length - 1);
         // check is empty object
         if (objectContent === '') return true;
