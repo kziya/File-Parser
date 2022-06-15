@@ -1,12 +1,11 @@
 'use stirct';
 
-
 class FileParser {
     #fs;
     #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
-    
+
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
@@ -121,10 +120,8 @@ class FileParser {
         else if (filteredJsonString[0] === '{')
             // Object
             return this.#checkJsonObject(filteredJsonString);
-
-        else
-            // Elem
-            return this.#checkJsonElem(filteredJsonString);
+        // Elem
+        else return this.#checkJsonElem(filteredJsonString);
     }
 
     #removeComments = (string) => {
@@ -408,12 +405,12 @@ class FileParser {
     }
 
     #checkJsonArray(jsonArray) {
-        if(!this.#checkJsonBrackets(jsonArray)) return false;
+        if (!this.#checkJsonBrackets(jsonArray)) return false;
         const arrayContent = jsonArray.slice(1, jsonArray.length - 1);
         // check If array empty
-        
+
         if (arrayContent === '') return true;
-        
+
         // divide content to blocks
         const blocks = this.#getJsonBlocks(arrayContent);
 
@@ -435,7 +432,7 @@ class FileParser {
     }
 
     #checkJsonObject(jsonObject) {
-        if(!this.#checkJsonBrackets(jsonObject)) return false;
+        if (!this.#checkJsonBrackets(jsonObject)) return false;
         const objectContent = jsonObject.slice(1, jsonObject.length - 1);
         // check is empty object
         if (objectContent === '') return true;
@@ -451,57 +448,51 @@ class FileParser {
             if (value[0] === '[') {
                 // Json array control
                 if (!this.#checkJsonArray(value)) return false;
-           
             } else if (value[0] === '{') {
                 // Json object check
                 if (!this.#checkJsonObject(value)) return false;
-           
             } else {
                 // Json elem check
-                if (!this.#checkJsonElem(value))  return false;
+                if (!this.#checkJsonElem(value)) return false;
             }
         }
 
         return true;
     }
-    
-    #checkJsonElem(jsonElem)
-    {
+
+    #checkJsonElem(jsonElem) {
         // Null
-        if(jsonElem.toLowerCase() === 'null') return true;
-       
+        if (jsonElem.toLowerCase() === 'null') return true;
+
         const firstElem = jsonElem[0];
-       
         // String
-        if(firstElem === '"') return this.#checkJsonStringElem(jsonElem);
+        if (firstElem === '"') return this.#checkJsonStringElem(jsonElem);
         // Number
-        if('0123456789'.includes(firstElem)) return this.#checkJsonNumberElem(jsonElem);
+        if ('0123456789'.includes(firstElem))
+            return this.#checkJsonNumberElem(jsonElem);
         // Empty or Invalid
-       return false;
+        return false;
     }
-    
-    #checkJsonStringElem(stringElem)
-    {
-        if(stringElem[stringElem.length - 1] !== '"') return false;
+
+    #checkJsonStringElem(stringElem) {
+        if (stringElem[stringElem.length - 1] !== '"') return false;
         return true;
     }
-    
-    #checkJsonNumberElem(numberElem)
-    {
+
+    #checkJsonNumberElem(numberElem) {
         const allowedChars = '.0123456789';
-        if(!this.#checkAllowedChars(numberElem, allowedChars)) return false;
+        if (!this.#checkAllowedChars(numberElem, allowedChars)) return false;
         let dotCounter = 0;
-        
-        for(let i = 0; i < numberElem.length; i++)
-        {
-            if(numberElem[i] = '.') dotCounter++; 
-        }  
 
-        if(dotCounter >= 2) return false;
+        for (let i = 0; i < numberElem.length; i++) {
+            if (numberElem[i] === '.') dotCounter++;
+        }
+
+        if (dotCounter >= 2) return false;
 
         return true;
     }
-    
+
     #getJsonBlocks(jsonContent) {
         const bracketStack = [];
         const hash = {
@@ -525,13 +516,11 @@ class FileParser {
         return blocks;
     }
 
-    #checkAllowedChars(actual, allowed)
-    {
-        for(const char of actual)
-        {
-            if(!allowed.includes(actual)) return false;
+    #checkAllowedChars(actual, allowed) {
+        for (const char of actual) {
+            if (!allowed.includes(char)) return false;
         }
-        return true;    
+        return true;
     }
 
     #firstColonIndex(jsonObject) {
