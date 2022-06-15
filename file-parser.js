@@ -1,11 +1,13 @@
 'use stirct';
 
+const { json } = require("express");
+
 class FileParser {
     #fs;
     #path;
     #dirPath;
     #fileTypes = ['css', 'json'];
-
+    
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
@@ -120,7 +122,10 @@ class FileParser {
         else if (filteredJsonString[0] === '{')
             // Object
             return this.#checkJsonObject(filteredJsonString);
-        return false; // If It is not an array and object return false
+
+        else
+            // Elem
+            return filteredJsonString.match() ? true : false; 
     }
 
     #removeComments = (string) => {
@@ -404,12 +409,15 @@ class FileParser {
     }
 
     #checkJsonArray(jsonArray) {
-        if (!this.#checkJsonBrackets(jsonArray)) return false;
+        if(!this.#checkJsonBrackets(jsonArray)) return false;
         const arrayContent = jsonArray.slice(1, jsonArray.length - 1);
         // check If array empty
+        
         if (arrayContent === '') return true;
+        
         // divide content to blocks
         const blocks = this.#getJsonBlocks(arrayContent);
+
         for (let i = 0; i < blocks.length; i++) {
             const block = blocks[i];
             if (block[0] === '[') {
@@ -420,8 +428,7 @@ class FileParser {
                 if (!this.#checkJsonObject(block)) return false;
             } else {
                 // Array element control
-                if (!block.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm))
-                    return false;
+                if (!this.#checkJsonElem(block)) return false;
             }
         }
 
@@ -429,7 +436,7 @@ class FileParser {
     }
 
     #checkJsonObject(jsonObject) {
-        if (!this.#checkJsonBrackets(jsonObject)) return false;
+        if(this.#checkJsonBrackets(jsonObject)) return false;
         const objectContent = jsonObject.slice(1, jsonObject.length - 1);
         // check is empty object
         if (objectContent === '') return true;
@@ -445,18 +452,57 @@ class FileParser {
             if (value[0] === '[') {
                 // Json array control
                 if (!this.#checkJsonArray(value)) return false;
+           
             } else if (value[0] === '{') {
                 // Json object check
                 if (!this.#checkJsonObject(value)) return false;
+           
             } else {
-                if (!value.match(/^([1-9]\d*(\.\d+)?|"[^"]*")$/gm))
-                    return false;
+                // Json elem check
+                if (!this.#checkJsonElem(value))  return false;
             }
         }
 
         return true;
     }
+    
+    #checkJsonElem(jsonElem)
+    {
+        // Null
+        if(jsonElem.toLowerCase() === 'null') return true;
+       
+        const firstElem = jsonElem[0];
+       
+        // String
+        if(firstElem === '"') return this.#checkJsonStringElem(jsonElem);
+        // Number
+        if('0123456789'.includes(firstElem)) return this.#checkJsonNumberElem(jsonElem);
+        // Empty or Invalid
+       return false;
+    }
+    
+    #checkJsonStringElem(stringElem)
+    {
+        if(stringElem[stringElem.length - 1] !== '"') return false;
+        return true;
+    }
+    
+    #checkJsonNumberElem(numberElem)
+    {
+        const allowedChars = '.0123456789';
+        if(!this.#checkAllowedChars(numberElem, allowedChars)) return false;
+        let dotCounter = 0;
+        
+        for(let i = 0; i < numberElem.length; i++)
+        {
+            if(numberElem[i] = '.') dotCounter++; 
+        }  
 
+        if(dotCounter >= 2) return false;
+
+        return true;
+    }
+    
     #getJsonBlocks(jsonContent) {
         const bracketStack = [];
         const hash = {
@@ -478,6 +524,15 @@ class FileParser {
         }
         blocks.push(jsonContent.slice(lastIndex));
         return blocks;
+    }
+
+    #checkAllowedChars(actual, allowed)
+    {
+        for(const char of actual)
+        {
+            if(!allowed.includes(actual)) return false;
+        }
+        return true;    
     }
 
     #firstColonIndex(jsonObject) {
