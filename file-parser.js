@@ -78,11 +78,15 @@ class FileParser {
             return res;
         }
         // Make parsing
-        // parse json array
-        if (filteredJsonString[0] === '[')
+        if (filteredJsonString[0] === '[') {
+            // parse json array
             return this.#parseJsonArray(filteredJsonString);
-        // parse json object
-        return this.#parseJsonObject(filteredJsonString);
+        } else if (filteredJsonString[0] === '{') {
+            // parse json object
+            return this.#parseJsonObject(filteredJsonString);
+        }
+        // parse json elem
+        return this.#parseJsonElem(filteredJsonString);
     }
 
     toJson(data, minify = true) {
@@ -305,11 +309,7 @@ class FileParser {
             } else if (block[0] === '{') {
                 result.push(this.#parseJsonObject(block));
             } else {
-                const match = block.match(
-                    /([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm
-                );
-                const parsedVal = parseFloat(match);
-                result.push(Number.isNaN(parsedVal) ? match[0] : parsedVal);
+                result.push(this.#parseJsonElem(block));
             }
         }
         return result;
@@ -331,16 +331,21 @@ class FileParser {
             } else if (value[0] === '{') {
                 result[name] = this.#parseJsonObject(value);
             } else {
-                const match = value.match(
-                    /([0-9]\d*(\.\d+)?|(?<=")[^"]*(?="))/gm
-                );
-                const realVal = match ? match[0] : '';
-                const parsedVal = parseFloat(realVal);
-                result[name] = Number.isNaN(parsedVal) ? realVal : parsedVal;
+                const jsonElem = block.split(':')[1];
+                result[name] = this.#parseJsonElem(jsonElem);
             }
         }
 
         return result;
+    }
+
+    #parseJsonElem(jsonElem) {
+        // Null
+        if (jsonElem === 'null') return null;
+        // String
+        if (jsonElem[0] === '"') return jsonElem.slice(1, jsonElem.length - 1);
+        // Number
+        return Number(jsonElem);
     }
 
     #checkCssBrackets(filteredData) {
@@ -462,7 +467,7 @@ class FileParser {
 
     #checkJsonElem(jsonElem) {
         // Null
-        if (jsonElem.toLowerCase() === 'null') return true;
+        if (jsonElem === 'null') return true;
 
         const firstElem = jsonElem[0];
         // String
