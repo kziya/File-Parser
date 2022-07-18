@@ -6,6 +6,7 @@ class FileParser {
     #dirPath;
     #fileTypes = ['css', 'json'];
 
+    
     constructor(fs, path) {
         this.#fs = fs;
         this.#path = path;
